@@ -6,6 +6,9 @@ from scipy.special import comb
 def binomial_pmf(k, n, p):
     return comb(n, k) * (p**k) * ((1-p)**(n-k))
 
+def calculate_probabilities(correct, wrong, blank, n, p_c, p_w, p_b):
+    return comb(n, correct) * (p_c**correct) * comb(n - correct, wrong) * (p_w**wrong) * comb(n - correct - wrong, blank) * (p_b**blank)
+
 def question_a():
     # Define the probabilities
     t = 200  # starting time
@@ -18,10 +21,10 @@ def question_a():
     print("Probability of leaving blank (p_b):", p_b)
     n = 100  # total number of questions
 
-    # Arrays to store PMF values
+    # Arrays to store PMF valu           es
     x_values = np.arange(n + 1)
     px = [binomial_pmf(k, n, p_c) for k in x_values]
-    py = [binomial_pmf(k, n, p_w) for k in x_values]
+    py = [binomial_pmf(k, n, p_w) for k in x_values] 
     pz = [binomial_pmf(k, n, p_b) for k in x_values]
 
     # Save plots as PNG files
@@ -64,13 +67,9 @@ def question_b():
     total_probability = 0
     for correct in range(0, n + 1):
         for wrong in range(0, n - correct + 1):
-            net_points = 5*correct - 1.25*wrong 
-            if net_points >= M:
-                prob_correct = binomial_pmf(correct, n, p_c)
-                prob_wrong = binomial_pmf(wrong, n - correct, p_w)
-                blank = n - correct - wrong
-                prob_blank = binomial_pmf(blank, n - correct - wrong, p_b)
-                total_probability += prob_correct * prob_wrong * prob_blank
+            net_points = 5*correct - 1.25*wrong
+            if net_points > M:
+                total_probability += calculate_probabilities(correct, wrong, n - correct - wrong, n, p_c, p_w, p_b)
 
     print(f"Probability of scoring more than {M} points: {total_probability}")
 
@@ -79,17 +78,15 @@ def question_c():
     t = 120
     p_c = 0.6 + (2*t - 40) / 1000  # Probability of a correct answer
     p_w = 0.2 + (30 - t) / 1000    # Probability of a wrong answer
+    p_b = 1 - (p_c + p_w)          # Probability of leaving a question blank
 
     # Initial condition
     initial_correct = 20
     initial_wrong = 7
     initial_blank = 4
     total_initial_questions = initial_correct + initial_wrong + initial_blank
-
-    # Probability of the initial condition
-    prob_initial_condition = (comb(total_initial_questions, initial_correct) * p_c**initial_correct *
-                            comb(total_initial_questions - initial_correct, initial_wrong) * p_w**initial_wrong)
-
+    n = 100
+    
     # Remaining questions
     remaining_questions = 100 - total_initial_questions
 
@@ -105,13 +102,15 @@ def question_c():
         for wrong in range(0, remaining_questions - correct + 1):
             net_points = correct - wrong // 4
             additional_score = net_points * 5
+            blank = remaining_questions - correct - wrong
             if additional_score >= required_additional_score:
-                prob_correct = comb(remaining_questions, correct) * (p_c ** correct) * ((1 - p_c) ** (remaining_questions - correct))
-                prob_wrong = comb(remaining_questions - correct, wrong) * (p_w ** wrong) * ((1 - p_w) ** (remaining_questions - correct - wrong))
-                probability_pass_given_condition += (prob_correct * prob_wrong) / prob_initial_condition
+                probability_pass_given_condition += calculate_probabilities(correct,wrong,blank,remaining_questions,p_c,p_w,p_b)
 
     print("Conditional probability of passing the exam (s):", probability_pass_given_condition)
 
 
+def question_d():
 
-question_b()
+
+
+question_d()
